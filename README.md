@@ -6,6 +6,18 @@ This is an independent community plugin, not built by or affiliated with the Ope
 
 Give a session a verifiable objective. When a turn finishes and the session is idle, the plugin continues work until the model verifies completion, you stop it, a budget is reached, or progress cannot continue.
 
+## Install from npm
+
+Published as [opencode-session-goals](https://www.npmjs.com/package/opencode-session-goals) by `fir3pho3nixx`. Add it to `opencode.json`, then restart OpenCode:
+
+```json
+{
+  "plugin": ["opencode-session-goals@0.1.1"]
+}
+```
+
+OpenCode installs the package and dependencies. This release targets **1.19.4**; OpenCode 2.x has a different API.
+
 ## Install from GitHub
 
 Add the versioned release package to `opencode.json`, then restart OpenCode:
@@ -97,6 +109,6 @@ The integration test starts a real OpenCode server with isolated config/data/sta
 
 `@opencode-ai/plugin` is pinned to match the host. Its dependency tree currently produces npm audit advisories in upstream `zod` and `toml` dependencies. This package does not override the host's Effect runtime or upgrade its API underneath it.
 
-## npm publication
+## Publishing a release
 
-The package is prepared as `opencode-session-goals`. GitHub release installation works independently of npm publication. To publish after signing in to npm, run the checks above, then `npm publish --access public`. After publication, users can configure `"plugin": ["opencode-session-goals@0.1.1"]`.
+Run the checks above, create a versioned package with `npm pack`, and publish the tested tarball with `npm publish <tarball> --access public`. npm requires publishing authentication. GitHub release installation is also available independently of npm publication.

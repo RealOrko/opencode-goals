@@ -121,7 +121,7 @@ test("real OpenCode 1.19.4 plugin lifecycle with a local deterministic provider"
         headers: { "content-type": "application/json", "x-opencode-directory": project },
         body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(20_000) });
       const text = await response.text();
-      if (!response.ok) throw new Error(`${path} ${response.status}: ${text}`);
+      if (!response.ok) throw new Error(`${path} ${response.status}: ${text}\nOpenCode log tail:\n${output.slice(-8000)}`);
       return text ? JSON.parse(text) : undefined;
     };
     const command = (id: string, args: string) => api(`/session/${id}/command`, { command: "goal", arguments: args, agent: "build", model: "goal-fixture/goal-test" });

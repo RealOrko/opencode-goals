@@ -1,6 +1,6 @@
 {
   "name": "opencode-session-goals",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Persistent session goals and bounded automatic continuation for OpenCode",
   "type": "module",
   "license": "MIT",

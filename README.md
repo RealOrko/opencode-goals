@@ -12,7 +12,7 @@ Add the versioned release package to `opencode.json`, then restart OpenCode:
 
 ```json
 {
-  "plugin": ["https://github.com/RealOrko/opencode-goals/releases/download/v0.1.0/opencode-session-goals-0.1.0.tgz"]
+  "plugin": ["https://github.com/RealOrko/opencode-goals/releases/download/v0.1.1/opencode-session-goals-0.1.1.tgz"]
 }
 ```
 
@@ -75,7 +75,7 @@ The model also gets `create_goal`, `get_goal`, and `update_goal` tools. It may c
 
 ## State and boundaries
 
-State is saved under `${XDG_STATE_HOME:-~/.local/state}/opencode-goals/<directory-hash>/<session-id>.json`, with private file permissions, interprocess locking and atomic replacement. `OPENCODE_GOALS_STATE_DIR` changes the storage root. Corrupt or unsupported state produces an error and is preserved. Locks abandoned by a crashed process expire after 30 seconds.
+State is saved under `${XDG_STATE_HOME:-~/.local/state}/opencode-goals/<directory-hash>/<session-id>.json`, with private file permissions, interprocess locking and atomic replacement. `OPENCODE_GOALS_STATE_DIR` changes the storage root. Corrupt or unsupported state produces an error and is preserved. Locks abandoned by a crashed process expire after 5 seconds; writes retry long enough to recover them on the first command after restart.
 
 Server startup does not launch unattended work in every saved session. Saved state becomes available when the session is opened or used; `/goal resume` explicitly starts work again when needed. An OpenCode process must stay running for automatic continuation.
 
@@ -99,4 +99,4 @@ The integration test starts a real OpenCode server with isolated config/data/sta
 
 ## npm publication
 
-The package is prepared as `opencode-session-goals`. GitHub release installation works independently of npm publication. To publish after signing in to npm, run the checks above, then `npm publish --access public`. After publication, users can configure `"plugin": ["opencode-session-goals@0.1.0"]`.
+The package is prepared as `opencode-session-goals`. GitHub release installation works independently of npm publication. To publish after signing in to npm, run the checks above, then `npm publish --access public`. After publication, users can configure `"plugin": ["opencode-session-goals@0.1.1"]`.

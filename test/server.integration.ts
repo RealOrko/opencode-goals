@@ -142,6 +142,9 @@ test("real OpenCode 1.19.4 plugin lifecycle with a local deterministic provider"
       assert.equal(messages.filter((m: any) => m.info.role === "user").length, 2);
     });
     await t.test("durable goal survives restarting the actual OpenCode server", async () => {
+      // update_goal persists completion before the model emits its final reply.
+      // Finish that reply before testing an ordinary server restart.
+      await eventually(() => api("/session/status"), statuses => !statuses[id] || statuses[id].type === "idle", "completed session idle");
       await stop(); url = await start();
       const status = await command(id, "status");
       assert.equal((await store.get(id))!.status, "complete");

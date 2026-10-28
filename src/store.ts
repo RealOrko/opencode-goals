@@ -68,7 +68,11 @@ export class GoalStore {
     await mkdir(this.directory, { recursive: true, mode: 0o700 });
     const path = this.path(sessionID);
     const release = await lockfile.lock(path, {
-      realpath: false, stale: 30_000, retries: { retries: 50, minTimeout: 10, maxTimeout: 100 },
+      // The host can terminate during a background event write. Retry for longer
+      // than the abandoned-lock interval so the first command after restart can
+      // recover. Only local file IO happens while holding this lock.
+      realpath: false, stale: 5_000, update: 1_000,
+      retries: { retries: 100, minTimeout: 10, maxTimeout: 100 },
     });
     try {
       const { goal, result } = update(await this.get(sessionID));

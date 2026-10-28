@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, test } from "node:test";
@@ -218,6 +218,16 @@ test("state corruption is surfaced and preserved, and session path traversal is 
   await assert.rejects(f.store.get(sessionID));
   assert.equal(await readFile(f.store.path(sessionID), "utf8"), "{broken");
   assert.throws(() => f.store.path("../../escape"), /Invalid/);
+});
+
+test("a freshly abandoned process lock is recovered on the first command", { timeout: 12_000 }, async () => {
+  const f = await fixture();
+  await f.engine.create(sessionID, "Recover after restart");
+  // Simulate abrupt process death between acquiring the lock and releasing it.
+  await mkdir(`${f.store.path(sessionID)}.lock`);
+  const response = await f.engine.command(sessionID, "pause");
+  assert.match(response.text, /Status: paused/);
+  assert.equal((await f.store.get(sessionID))?.objective, "Recover after restart");
 });
 
 test("failed work tools still allow another attempt instead of triggering the no-tool guard", async () => {

@@ -7,7 +7,7 @@ import { GoalStore } from "./store.js";
 const GoalPlugin: Plugin = async ({ client, directory }, options = {}) => {
   const stateDirectory = typeof options.stateDirectory === "string" ? options.stateDirectory : undefined;
   const delayMs = typeof options.continuationDelayMs === "number" ? options.continuationDelayMs : 350;
-  if (!Number.isFinite(delayMs) || delayMs < 50) throw new Error("continuationDelayMs must be at least 50.");
+  if (!Number.isFinite(delayMs) || delayMs < 50) throw new Error("⚠️ continuationDelayMs must be at least 50.");
   const query = { directory };
   const host: Host = {
     async messages(sessionID) {
@@ -27,7 +27,7 @@ const GoalPlugin: Plugin = async ({ client, directory }, options = {}) => {
           ...goal.variant ? { variant: goal.variant } : {},
           parts: [{
             type: "text", synthetic: true,
-            text: "Continue working toward the active session goal. Check the current evidence and take the next useful action. " +
+            text: "🔄 Continue working toward the active session goal. Check the current evidence and take the next useful action. " +
               "If the whole objective is verified, call update_goal to mark it complete with evidence. " +
               "Do not ask the user to say keep going.\n\n" + summary(goal),
             metadata: { opencodeGoals: { kind: "continue", goalID: goal.id, leaseID } },
@@ -39,7 +39,7 @@ const GoalPlugin: Plugin = async ({ client, directory }, options = {}) => {
       await client.session.abort({ path: { id: sessionID }, query, throwOnError: true });
     },
     async notice(_sessionID, message, warning) {
-      await client.tui.showToast({ body: { title: "Session goal", message, variant: warning ? "warning" : "info" } });
+      await client.tui.showToast({ body: { title: "🎯 Session goal", message, variant: warning ? "warning" : "info" } });
     },
     async log(error) {
       await client.app.log({ body: { service: "opencode-session-goals", level: "error",
@@ -51,22 +51,22 @@ const GoalPlugin: Plugin = async ({ client, directory }, options = {}) => {
   return {
     async config(config) {
       config.command ??= {};
-      if (config.command.goal) throw new Error("Another plugin or config already owns /goal. Remove that command first.");
+      if (config.command.goal) throw new Error("⚠️ Another plugin or config already owns /goal. Remove that command first.");
       config.command.goal = {
-        description: "Persistent session goal: <objective>, status, pause, resume, clear, budget N/off",
-        template: "Manage the persistent session goal: $ARGUMENTS",
+        description: "🎯 Persistent session goal: <objective>, status, pause, resume, clear, budget N/off",
+        template: "🎯 Manage the persistent session goal: $ARGUMENTS",
       };
     },
     tool: {
       create_goal: tool({
-        description: "Create a persistent objective for this session ONLY when the user explicitly asks for a goal. " +
+        description: "🎯 Create a persistent objective for this session ONLY when the user explicitly asks for a goal. " +
           "Continues across turns until verified complete or stopped. Never invent a token budget.",
         args: {
           objective: s.string().min(1).describe("The user's explicit objective and success conditions"),
           token_budget: s.number().int().positive().optional().describe("Only when the user explicitly specifies a token budget"),
         },
         async execute(args, context) {
-          if (context.agent === "plan") throw new Error("Switch from plan mode to a working agent before starting a goal.");
+          if (context.agent === "plan") throw new Error("⚠️ Switch from plan mode to a working agent before starting a goal.");
           const messages = await host.messages(context.sessionID);
           const currentUser = latestTurn(messages).user?.info.id;
           const goal = await engine.create(context.sessionID, args.objective, { tokenBudget: args.token_budget }, currentUser);
@@ -74,12 +74,12 @@ const GoalPlugin: Plugin = async ({ client, directory }, options = {}) => {
         },
       }),
       get_goal: tool({
-        description: "Read this session's goal, status, token usage, limits and completion evidence.",
+        description: "🔎 Read this session's goal, status, token usage, limits and completion evidence.",
         args: {},
         async execute(_args, context) { return summary(await engine.get(context.sessionID)); },
       }),
       update_goal: tool({
-        description: "Mark the active goal complete ONLY after verifying every requirement with concrete evidence. " +
+        description: "✅ Mark the active goal complete ONLY after verifying every requirement with concrete evidence. " +
           "Or report the same external blocker across three consecutive turns to stop as blocked. " +
           "The model cannot pause, resume, clear, replace a live goal or change its budget.",
         args: {
@@ -140,14 +140,14 @@ const GoalPlugin: Plugin = async ({ client, directory }, options = {}) => {
         if (type === "message.updated" && p.info) await engine.onMessage(p.info);
         else if (type === "session.status" && p.status?.type !== "idle") engine.busy(p.sessionID);
         else if (type === "session.idle") engine.idle(p.sessionID);
-        else if (type === "session.error" && p.sessionID) await engine.pause(p.sessionID, `Session error: ${p.error?.name ?? "unknown"}`);
+        else if (type === "session.error" && p.sessionID) await engine.pause(p.sessionID, `❌ Session error: ${p.error?.name ?? "unknown"}`);
         else if (type === "session.deleted") await engine.remove(p.info.id);
         else if (["permission.asked", "permission.updated", "question.asked"].includes(type)) {
           engine.waitForUser(p.sessionID, p.id ?? p.requestID ?? p.permissionID);
         } else if (["permission.replied", "question.replied", "question.rejected"].includes(type)) {
           engine.answered(p.sessionID, p.requestID ?? p.permissionID ?? p.id);
           if (type === "question.rejected" || ["reject", "deny"].includes(p.reply ?? p.response)) {
-            await engine.pause(p.sessionID, "User declined an input or permission request.");
+            await engine.pause(p.sessionID, "⏸️ User declined an input or permission request.");
           }
         }
       } catch (error) {

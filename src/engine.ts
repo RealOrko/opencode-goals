@@ -55,7 +55,7 @@ export class GoalEngine {
       }
       return this.store.change(sessionID, previous => {
         if (previous && previous.status !== "complete") {
-          throw new Error("This session already has a goal. Use /goal clear before replacing it.");
+          throw new Error("⚠️ This session already has a goal. Use /goal clear before replacing it.");
         }
         return { goal, result: goal };
       });
@@ -85,9 +85,9 @@ export class GoalEngine {
       const messages = await this.host.messages(sessionID);
       return this.store.change(sessionID, goal => {
         if (goal) account(goal, messages);
-        if (command.action === "clear") return { result: { text: "Goal cleared for this session.", work: false } };
+        if (command.action === "clear") return { result: { text: "🧹 Goal cleared for this session.", work: false } };
         if (!goal) {
-          if (command.action !== "show") throw new Error("No goal is set for this session.");
+          if (command.action !== "show") throw new Error("⚠️ No goal is set for this session.");
           return { result: { text: summary(), work: false } };
         }
         // Any explicit control command cancels an outstanding automatic prompt.
@@ -95,15 +95,15 @@ export class GoalEngine {
         if (command.action === "pause") {
           if (goal.status !== "complete") {
             goal.status = "paused";
-            goal.reason = "Paused by user.";
+            goal.reason = "⏸️ Paused by user.";
           }
         } else if (command.action === "resume") {
-          if (goal.status === "complete") throw new Error("This goal is already complete.");
+          if (goal.status === "complete") throw new Error("⚠️ This goal is already complete.");
           if (goal.tokenBudget !== undefined && goal.tokensUsed >= goal.tokenBudget) {
-            throw new Error("Token budget is exhausted. Change it with /goal budget N or /goal budget off, then resume.");
+            throw new Error("⚠️ Token budget is exhausted. Change it with /goal budget N or /goal budget off, then resume.");
           }
           if (goal.maxContinuations !== undefined && goal.continuations >= goal.maxContinuations) {
-            throw new Error("Continuation limit reached. Clear and create a new goal with a larger --turns limit.");
+            throw new Error("⚠️ Continuation limit reached. Clear and create a new goal with a larger --turns limit.");
           }
           goal.status = "active";
           delete goal.reason;
@@ -130,7 +130,7 @@ export class GoalEngine {
         if (marker?.kind === "continue") {
           if (!goal || goal.id !== marker.goalID || goal.status !== "active" ||
             goal.pending?.id !== marker.leaseID || goal.pending.expiresAt < Date.now()) {
-            throw new Error("Goal continuation cancelled: session or goal state changed.");
+            throw new Error("⚠️ Goal continuation cancelled: session or goal state changed.");
           }
           goal.automaticTurn = true;
           goal.continuations++;
@@ -146,7 +146,7 @@ export class GoalEngine {
           goal.variant = variant;
           if (goal.status === "active" && message.agent === "plan") {
             goal.status = "paused";
-            goal.reason = "Plan mode does not run goals. Switch to a working agent and use /goal resume.";
+            goal.reason = "📝 Plan mode does not run goals. Switch to a working agent and use /goal resume.";
           }
           const controlOnly = marker?.kind === "control" && !marker.work;
           if (goal.status === "active" && !controlOnly) goal.trackedTurns.push(message.id);
@@ -160,22 +160,22 @@ export class GoalEngine {
 
   async update(sessionID: string, update: { status: "complete" | "blocked"; evidence: string }): Promise<Goal> {
     return this.queue(sessionID, async () => {
-      if (!update.evidence.trim()) throw new Error("Specific completion or blocker evidence is required.");
+      if (!update.evidence.trim()) throw new Error("⚠️ Specific completion or blocker evidence is required.");
       const messages = await this.host.messages(sessionID);
       return this.store.change(sessionID, goal => {
-        if (!goal) throw new Error("No goal is set for this session.");
+        if (!goal) throw new Error("⚠️ No goal is set for this session.");
         account(goal, messages);
-        if (goal.status !== "active") throw new Error(`Goal is ${goal.status}; only the user can resume it.`);
+        if (goal.status !== "active") throw new Error(`⚠️ Goal is ${goal.status}; only the user can resume it.`);
         if (update.status === "complete") {
           const observed = messages.filter(m => m.info.role === "assistant" && goal.trackedTurns.includes(m.info.parentID));
-          if (!madeProgress(observed)) throw new Error("Completion needs a successful non-goal tool call in this goal's work. Verify the outcome first.");
+          if (!madeProgress(observed)) throw new Error("⚠️ Completion needs a successful non-goal tool call in this goal's work. Verify the outcome first.");
           goal.status = "complete";
           goal.evidence = update.evidence.trim();
           delete goal.reason;
           delete goal.pending;
         } else {
           const turn = goal.lastUserID;
-          if (!turn) throw new Error("A blocker must be reported from an active turn.");
+          if (!turn) throw new Error("⚠️ A blocker must be reported from an active turn.");
           const description = update.evidence.trim();
           const previous = goal.blocker;
           const priorTurn = latestTurn(messages.filter(m => m.info.id !== turn &&
@@ -204,7 +204,7 @@ export class GoalEngine {
         account(goal, [{ info, parts: [] }]);
         if (goal.status === "active" && info.error) {
           goal.status = "paused";
-          goal.reason = info.error.name === "MessageAbortedError" ? "Interrupted by user." : `Session error: ${info.error.name}`;
+          goal.reason = info.error.name === "MessageAbortedError" ? "⏸️ Interrupted by user." : `❌ Session error: ${info.error.name}`;
           delete goal.pending;
         }
         return { goal, result: wasActive && goal.status === "budget_limited" };
@@ -212,7 +212,7 @@ export class GoalEngine {
       if (stop) {
         this.cancelTimer(info.sessionID);
         await this.host.abort(info.sessionID);
-        await this.host.notice(info.sessionID, "Goal token budget reached. Automatic work stopped.", true);
+        await this.host.notice(info.sessionID, "🛑 Goal token budget reached. Automatic work stopped.", true);
       }
     });
   }
@@ -269,13 +269,13 @@ export class GoalEngine {
           (goal.pending && goal.pending.expiresAt > Date.now())) return { goal, result: undefined };
         if (last.error || goal.agent === "plan") {
           goal.status = "paused";
-          goal.reason = last.error ? `Session stopped: ${last.error.name}` : "Plan mode does not run goals.";
+          goal.reason = last.error ? `🛑 Session stopped: ${last.error.name}` : "📝 Plan mode does not run goals.";
         } else if (goal.automaticTurn && !usedWorkTool(turn.assistants) && !goal.blocker?.turns.includes(turn.user.info.id)) {
           goal.status = "paused";
-          goal.reason = "Automatic turn made no tool calls that performed work. Use /goal resume to continue.";
+          goal.reason = "⏸️ Automatic turn made no tool calls that performed work. Use /goal resume to continue.";
         } else if (goal.maxContinuations !== undefined && goal.continuations >= goal.maxContinuations) {
           goal.status = "budget_limited";
-          goal.reason = "Automatic continuation limit reached.";
+          goal.reason = "🛑 Automatic continuation limit reached.";
         }
         if (goal.status !== "active") {
           delete goal.pending;
@@ -295,7 +295,7 @@ export class GoalEngine {
         await this.store.change(sessionID, goal => {
           if (goal?.pending?.id === decision.leaseID) {
             goal.status = "paused";
-            goal.reason = `Could not dispatch continuation: ${error instanceof Error ? error.message : String(error)}`;
+            goal.reason = `⚠️ Could not dispatch continuation: ${error instanceof Error ? error.message : String(error)}`;
             delete goal.pending;
           }
           return { goal, result: undefined };
@@ -312,12 +312,12 @@ export class GoalEngine {
 
   async beforeTool(sessionID: string, tool: string) {
     if (this.controls.has(sessionID) && tool !== "get_goal") {
-      throw new Error("This goal control turn is acknowledgement only. Do not call tools or change goal state.");
+      throw new Error("⚠️ This goal control turn is acknowledgement only. Do not call tools or change goal state.");
     }
     const goal = await this.store.get(sessionID);
     if (goal && goal.status !== "active" && goal.status !== "complete" &&
       goal.lastUserID && goal.trackedTurns.includes(goal.lastUserID)) {
-      throw new Error(`Goal work stopped (${goal.status}). Report the status and wait for user input.`);
+      throw new Error(`⚠️ Goal work stopped (${goal.status}). Report the status and wait for user input.`);
     }
   }
 

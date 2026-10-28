@@ -39,7 +39,7 @@ export class GoalStore {
   }
 
   path(sessionID: string) {
-    if (!/^ses_[a-zA-Z0-9_-]+$/.test(sessionID)) throw new Error("Invalid OpenCode session ID");
+    if (!/^ses_[a-zA-Z0-9_-]+$/.test(sessionID)) throw new Error("⚠️ Invalid OpenCode session ID");
     return join(this.directory, `${sessionID}.json`);
   }
 
@@ -55,7 +55,7 @@ export class GoalStore {
         typeof g.automaticTurn !== "boolean" ||
         !Array.isArray(g.trackedTurns) || !g.trackedTurns.every(t => typeof t === "string") ||
         !g.usage || typeof g.usage !== "object" || !Object.values(g.usage).every(n => Number.isFinite(n) && n >= 0)) {
-        throw new Error(`Invalid goal state: ${this.path(sessionID)}. State was left intact.`);
+        throw new Error(`⚠️ Invalid goal state: ${this.path(sessionID)}. State was left intact.`);
       }
       return value as Goal;
     } catch (error) {

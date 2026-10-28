@@ -14,10 +14,10 @@ export function tokenCount(message: Message): number {
 }
 
 export function newGoal(sessionID: string, objective: string, limits: Limits, baseline: SessionMessage[]): Goal {
-  if (!objective.trim()) throw new Error("A goal needs an objective.");
+  if (!objective.trim()) throw new Error("⚠️ A goal needs an objective.");
   for (const value of [limits.tokenBudget, limits.maxContinuations]) {
     if (value !== undefined && (!Number.isSafeInteger(value) || value <= 0)) {
-      throw new Error("Goal limits must be positive integers.");
+      throw new Error("⚠️ Goal limits must be positive integers.");
     }
   }
   return {
@@ -39,7 +39,7 @@ export function account(goal: Goal, messages: SessionMessage[]) {
   }
   if (goal.status === "active" && goal.tokenBudget !== undefined && goal.tokensUsed >= goal.tokenBudget) {
     goal.status = "budget_limited";
-    goal.reason = `Token budget reached (${goal.tokensUsed}/${goal.tokenBudget}).`;
+    goal.reason = `🛑 Token budget reached (${goal.tokensUsed}/${goal.tokenBudget}).`;
     delete goal.pending;
   }
 }
@@ -67,13 +67,16 @@ export function usedWorkTool(messages: SessionMessage[]): boolean {
 }
 
 export function summary(goal?: Goal): string {
-  if (!goal) return "No goal is set for this session. Start one with /goal <objective>.";
+  if (!goal) return "🎯 No goal is set for this session. Start one with /goal <objective>.";
+  const statusIcons: Record<Goal["status"], string> = {
+    active: "▶️", paused: "⏸️", blocked: "🚧", complete: "✅", budget_limited: "🛑",
+  };
   return [
-    `Goal: ${goal.objective}`, `Status: ${goal.status}`,
-    `Tokens used: ${goal.tokensUsed}${goal.tokenBudget === undefined ? " (no budget set)" : ` / ${goal.tokenBudget}`}`,
-    goal.tokenBudget === undefined ? "" : `Tokens remaining: ${Math.max(0, goal.tokenBudget - goal.tokensUsed)}`,
-    `Automatic continuations: ${goal.continuations}${goal.maxContinuations === undefined ? "" : ` / ${goal.maxContinuations}`}`,
-    goal.reason ? `Reason: ${goal.reason}` : "", goal.evidence ? `Evidence: ${goal.evidence}` : "",
+    `🎯 Goal: ${goal.objective}`, `${statusIcons[goal.status]} Status: ${goal.status}`,
+    `🪙 Tokens used: ${goal.tokensUsed}${goal.tokenBudget === undefined ? " (no budget set)" : ` / ${goal.tokenBudget}`}`,
+    goal.tokenBudget === undefined ? "" : `🔋 Tokens remaining: ${Math.max(0, goal.tokenBudget - goal.tokensUsed)}`,
+    `🔄 Automatic continuations: ${goal.continuations}${goal.maxContinuations === undefined ? "" : ` / ${goal.maxContinuations}`}`,
+    goal.reason ? `💬 Reason: ${goal.reason}` : "", goal.evidence ? `🧾 Evidence: ${goal.evidence}` : "",
   ].filter(Boolean).join("\n");
 }
 
@@ -105,7 +108,7 @@ export function parseCommand(raw: string): GoalCommand {
   const budget = /^budget\s+(off|\d+)$/.exec(text);
   if (budget) {
     const tokenBudget = budget[1] === "off" ? undefined : Number(budget[1]);
-    if (tokenBudget !== undefined && (!Number.isSafeInteger(tokenBudget) || tokenBudget <= 0)) throw new Error("Budget must be positive or off.");
+    if (tokenBudget !== undefined && (!Number.isSafeInteger(tokenBudget) || tokenBudget <= 0)) throw new Error("⚠️ Budget must be positive or off.");
     return { action: "budget", tokenBudget };
   }
   let objective = text;
@@ -113,13 +116,13 @@ export function parseCommand(raw: string): GoalCommand {
   while (objective.startsWith("--")) {
     if (objective.startsWith("-- ")) { objective = objective.slice(3); break; }
     const flag = /^--(tokens|turns)\s+(\d+)\s+/.exec(objective);
-    if (!flag) throw new Error("Usage: /goal [--tokens N] [--turns N] <objective>");
+    if (!flag) throw new Error("⚠️ Usage: /goal [--tokens N] [--turns N] <objective>");
     const number = Number(flag[2]);
-    if (!Number.isSafeInteger(number) || number <= 0) throw new Error("Limits must be positive integers.");
+    if (!Number.isSafeInteger(number) || number <= 0) throw new Error("⚠️ Limits must be positive integers.");
     if (flag[1] === "tokens") limits.tokenBudget = number;
     else limits.maxContinuations = number;
     objective = objective.slice(flag[0].length);
   }
-  if (!objective.trim()) throw new Error("A goal needs an objective.");
+  if (!objective.trim()) throw new Error("⚠️ A goal needs an objective.");
   return { action: "start", objective: objective.trim(), limits };
 }

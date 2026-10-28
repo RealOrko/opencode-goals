@@ -1,21 +1,43 @@
 {
   "name": "opencode-session-goals",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "🎯 Persistent session goals and bounded automatic continuation for OpenCode",
   "type": "module",
   "license": "MIT",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
-    "./server": { "types": "./dist/index.d.ts", "import": "./dist/index.js" }
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./server": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
   },
-  "repository": { "type": "git", "url": "git+https://github.com/RealOrko/opencode-goals.git" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RealOrko/opencode-goals.git"
+  },
   "homepage": "https://github.com/RealOrko/opencode-goals#readme",
-  "bugs": { "url": "https://github.com/RealOrko/opencode-goals/issues" },
-  "keywords": ["opencode", "opencode-plugin", "goals", "agent", "automation"],
-  "publishConfig": { "access": "public" },
-  "files": ["dist", "README.md"],
+  "bugs": {
+    "url": "https://github.com/RealOrko/opencode-goals/issues"
+  },
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "goals",
+    "agent",
+    "automation"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -35,5 +57,8 @@
     "tsx": "^4.20.0",
     "typescript": "^5.9.0"
   },
-  "engines": { "node": ">=22", "opencode": "1.19.4" }
+  "engines": {
+    "node": ">=22",
+    "opencode": "1.19.4"
+  }
 }

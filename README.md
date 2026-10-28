@@ -12,7 +12,7 @@
 
 ```json
 {
-  "plugin": ["opencode-session-goals@0.1.1"]
+  "plugin": ["opencode-session-goals@0.1.2"]
 }
 ```
 
@@ -24,7 +24,7 @@
 
 ```json
 {
-  "plugin": ["https://github.com/RealOrko/opencode-goals/releases/download/v0.1.1/opencode-session-goals-0.1.1.tgz"]
+  "plugin": ["https://github.com/RealOrko/opencode-goals/releases/download/v0.1.2/opencode-session-goals-0.1.2.tgz"]
 }
 ```
 

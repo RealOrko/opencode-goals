@@ -103,6 +103,7 @@ test("real OpenCode 1.19.4 plugin lifecycle with a local deterministic provider"
         XDG_CONFIG_HOME: join(root, "config"), XDG_DATA_HOME: join(root, "data"),
         XDG_STATE_HOME: join(root, "state"), XDG_CACHE_HOME: join(root, "cache"),
         OPENCODE_CONFIG_DIR: join(root, "config/opencode"), OPENCODE_GOALS_STATE_DIR: stateRoot,
+        npm_config_cache: join(root, "npm-cache"),
         OPENCODE_DISABLE_DEFAULT_PLUGINS: "true", OPENCODE_DISABLE_MODELS_FETCH: "true",
         HERDR_PANE_ID: "", HERDR_SOCKET_PATH: "", OPENCODE_SERVER_PASSWORD: "",
       },
